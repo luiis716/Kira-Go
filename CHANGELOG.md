@@ -4,16 +4,6 @@ Este repositório público é focado em **documentação** e **notas de versão*
 
 O formato segue a ideia do *Keep a Changelog*: cada versão lista mudanças em **Added / Changed / Fixed**.
 
-## [Unreleased]
-
-### Added
-- —
-
-### Changed
-- —
-
-### Fixed
-- —
 
 ## [1.1] - 2025-12-20
 
