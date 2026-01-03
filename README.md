@@ -33,6 +33,11 @@ KIRAGO_GLOBAL_HMAC_KEY=your_global_hmac_key_here_minimum_32_chars
 # URL global do webhook
 KIRAGO_GLOBAL_WEBHOOK=https://example.com/webhook
 
+# Webhook retry configuration (optional)
+WEBHOOK_RETRY_ENABLED=true
+WEBHOOK_RETRY_COUNT=5
+WEBHOOK_RETRY_DELAY_SECONDS=30
+
 # "json" ou "formulário" para o padrão
 WEBHOOK_FORMAT=json
 
