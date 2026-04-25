@@ -71,6 +71,7 @@ Crie um arquivo `.env` na mesma pasta do `docker-compose.yml`. Você pode copiar
 | Variável | Padrão | Descrição |
 |---|---|---|
 | `KIRAGO_GLOBAL_WEBHOOK` | — | URL de webhook global (recebe eventos de todos os usuários) |
+| `KIRAGO_GLOBAL_WEBHOOK_EVENTS` | — | Eventos a encaminhar para o webhook global, separados por vírgula (vazio = todos) |
 | `WEBHOOK_FORMAT` | `json` | Formato do payload: `json` ou `form` |
 | `WEBHOOK_RETRY_ENABLED` | `true` | Ativa retry automático em falha de entrega |
 | `WEBHOOK_RETRY_COUNT` | `5` | Número de tentativas |
@@ -342,34 +343,145 @@ Parâmetros:
 
 ## Eventos de webhook
 
-Use `"events": ["All"]` para receber tudo, ou especifique os tipos desejados.
+O KiraGo tem dois tipos de webhook. Os eventos disponíveis são os mesmos em ambos, mas a forma de configurar é diferente:
 
-### Sessão e conexão
-`Connected` · `Disconnected` · `ConnectFailure` · `LoggedOut` · `ClientOutdated` · `TemporaryBan` · `StreamError` · `StreamReplaced` · `KeepAliveTimeout` · `KeepAliveRestored`
+| | Webhook da instância | Webhook global |
+|---|---|---|
+| **Escopo** | Por instância (usuário) | Servidor inteiro — recebe de todas as instâncias |
+| **Como configurar** | `POST /webhook` com `"events": [...]` | Env `KIRAGO_GLOBAL_WEBHOOK` + `KIRAGO_GLOBAL_WEBHOOK_EVENTS` |
+| **Filtro de eventos** | Campo `events` na requisição | `KIRAGO_GLOBAL_WEBHOOK_EVENTS` separado por vírgula |
+| **Payload extra** | `userID`, `instanceName` | `userID`, `instanceName` (igual) |
+| **HMAC** | Chave por instância (`POST /session/hmac/config`) | `KIRAGO_GLOBAL_HMAC_KEY` |
+| **Retry automático** | Sim (fila de outbox) | Não |
 
-### QR / pareamento
-`QR` · `QRTimeout` · `PairSuccess` · `PairError` · `QRScannedWithoutMultidevice`
+> Use `"events": ["All"]` (instância) ou deixe `KIRAGO_GLOBAL_WEBHOOK_EVENTS` vazio (global) para receber todos os eventos sem filtro.
 
-### Mensagens
-`Message` · `GroupMessage` · `UndecryptableMessage` · `MediaRetry` · `ReadReceipt` · `GroupReadReceipt`
+---
 
-### Grupos e contatos
-`GroupInfo` · `JoinedGroup` · `Picture` · `BlocklistChange` · `Blocklist`
+### 💬 Mensagens
 
-### Presença
-`Presence` · `ChatPresence`
+| Evento | O que dispara |
+|---|---|
+| `Message` | Nova mensagem recebida ou enviada em conversa individual |
+| `GroupMessage` | Nova mensagem recebida ou enviada em grupo |
+| `UndecryptableMessage` | Mensagem que não foi possível descriptografar |
+| `Receipt` | Recibo de entrega de mensagem (alias de `ReadReceipt`) |
+| `ReadReceipt` | Confirmação de leitura de mensagem (tique azul) |
+| `GroupReadReceipt` | Confirmação de leitura em grupo |
+| `MediaRetry` | Tentativa de reenvio de mídia que falhou no download |
 
-### Sincronização
-`HistorySync` · `AppState` · `AppStateSyncComplete` · `OfflineSyncCompleted` · `OfflineSyncPreview`
+---
 
-### Chamadas
-`CallOffer` · `CallAccept` · `CallTerminate` · `CallOfferNotice` · `CallRelayLatency`
+### 👥 Grupos e contatos
 
-### Configurações e privacidade
-`PrivacySettings` · `PushNameSetting` · `UserAbout` · `IdentityChange`
+| Evento | O que dispara |
+|---|---|
+| `GroupInfo` | Alteração nas informações do grupo (nome, descrição, configurações, participantes) |
+| `JoinedGroup` | Instância entrou em um novo grupo |
+| `Picture` | Foto de perfil de contato ou grupo foi atualizada |
+| `BlocklistChange` | Um contato foi bloqueado ou desbloqueado |
+| `Blocklist` | Lista de bloqueados sincronizada completa |
 
-### Newsletter (Canais)
-`NewsletterJoin` · `NewsletterLeave` · `NewsletterMuteChange` · `NewsletterLiveUpdate`
+---
+
+### 🔌 Sessão e conexão
+
+| Evento | O que dispara |
+|---|---|
+| `Connected` | Instância conectada com sucesso ao WhatsApp |
+| `Disconnected` | Instância desconectada (perda de conexão ou logout) |
+| `ConnectFailure` | Falha ao tentar conectar |
+| `LoggedOut` | Sessão encerrada pelo WhatsApp (deslogar do celular) |
+| `ClientOutdated` | Versão do cliente considerada desatualizada pelo WhatsApp |
+| `TemporaryBan` | Número banido temporariamente pelo WhatsApp |
+| `StreamError` | Erro no stream de conexão com o servidor do WhatsApp |
+| `StreamReplaced` | Stream substituído (outra sessão aberta com o mesmo número) |
+| `KeepAliveTimeout` | Timeout no keep-alive da conexão |
+| `KeepAliveRestored` | Conexão keep-alive restaurada após timeout |
+
+---
+
+### 📷 QR e pareamento
+
+| Evento | O que dispara |
+|---|---|
+| `QR` | Novo QR Code gerado para parear o dispositivo |
+| `QRTimeout` | QR Code expirou sem ser escaneado |
+| `PairSuccess` | Pareamento concluído com sucesso |
+| `PairError` | Falha no pareamento do dispositivo |
+| `QRScannedWithoutMultidevice` | QR escaneado por um aparelho sem suporte a multidevice |
+
+---
+
+### 👀 Presença
+
+| Evento | O que dispara |
+|---|---|
+| `Presence` | Mudança de presença de um contato (online/offline/digitando) |
+| `ChatPresence` | Contato está digitando ou gravando áudio em um chat |
+
+---
+
+### 🔄 Sincronização
+
+| Evento | O que dispara |
+|---|---|
+| `HistorySync` | Sincronização de histórico de mensagens (ao conectar ou solicitar) |
+| `AppState` | Atualização do estado interno do app (listas, contatos, configurações) |
+| `AppStateSyncComplete` | Sincronização de estado do app concluída |
+| `OfflineSyncCompleted` | Sincronização offline concluída após reconexão |
+| `OfflineSyncPreview` | Preview de itens pendentes antes da sincronização offline |
+
+---
+
+### 📞 Chamadas
+
+| Evento | O que dispara |
+|---|---|
+| `CallOffer` | Chamada recebida (voz ou vídeo) |
+| `CallAccept` | Chamada aceita pelo destinatário |
+| `CallTerminate` | Chamada encerrada |
+| `CallOfferNotice` | Aviso de chamada (notificação sem atender) |
+| `CallRelayLatency` | Informação de latência do relay da chamada |
+
+---
+
+### ⚙️ Configurações e privacidade
+
+| Evento | O que dispara |
+|---|---|
+| `PrivacySettings` | Configurações de privacidade atualizadas (foto, recados, etc.) |
+| `PushNameSetting` | Nome de exibição do número atualizado |
+| `UserAbout` | Recado/status do contato atualizado |
+| `IdentityChange` | Chave de identidade de um contato foi alterada (troca de aparelho) |
+| `CATRefreshError` | Erro ao renovar token de autenticação interno |
+
+---
+
+### 📢 Newsletter (Canais WhatsApp)
+
+| Evento | O que dispara |
+|---|---|
+| `NewsletterJoin` | Instância passou a seguir um canal |
+| `NewsletterLeave` | Instância deixou de seguir um canal |
+| `NewsletterMuteChange` | Silenciamento de um canal foi alterado |
+| `NewsletterLiveUpdate` | Nova publicação ou atualização ao vivo em um canal seguido |
+
+---
+
+### 🌐 Meta / Facebook Bridge
+
+| Evento | O que dispara |
+|---|---|
+| `FBMessage` | Mensagem recebida via bridge Facebook/Meta (uso em contas Business) |
+
+---
+
+### 🔮 Especial
+
+| Evento | O que dispara |
+|---|---|
+| `All` | Recebe todos os eventos acima sem exceção |
 
 ---
 
