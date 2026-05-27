@@ -2,7 +2,7 @@
 
 KiraGo é uma API REST para automação de WhatsApp Web (multidevice).
 
-Este repositório público existe para **documentação de uso** e **notas de versão**.
+Este repositório reúne **documentação de uso** para assinantes e **notas de cada versão** ([CHANGELOG](./CHANGELOG.md)). Aqui você encontra como configurar, integrar e o que mudou em cada atualização da sua assinatura — não é um guia de deploy para desenvolvedores.
 
 ## Aviso importante
 
@@ -99,6 +99,19 @@ Crie um arquivo `.env` na mesma pasta do `docker-compose.yml`. Você pode copiar
 | `KIRAGO_PROXY_FAILOPEN` | `false` | Ao detectar falha no proxy, desativa-o e reconecta direto pela VPS |
 | `KIRAGO_PROXY_FAILOPEN_COOLDOWN_SECONDS` | `300` | Cooldown (segundos) entre tentativas de fail-open por sessão |
 
+#### Proxy no painel (por instância)
+
+No dashboard, abra a instância → **Proxy**:
+
+| Modo | O que você faz |
+|---|---|
+| **Webshare (pool)** | Cole a API key da [Webshare](https://www.webshare.io/). O KiraGo escolhe um proxy da sua lista automaticamente. |
+| **Manual** | Informe host, porta, usuário e senha (SOCKS5 ou HTTP). |
+
+**Compartilhar pool:** em uma instância, ative *compartilhar pool* para outras instâncias usarem a mesma conta Webshare. Cada instância recebe um IP diferente — não há dois números no mesmo proxy ao mesmo tempo.
+
+**Trocar proxy:** use *forçar rotação* no modal para pegar outro IP do pool.
+
 ### Variáveis de RabbitMQ
 
 | Variável | Padrão | Descrição |
@@ -126,9 +139,18 @@ Após subir a instância:
 | `{BASE_URL}/docs` | Documentação de uso |
 | `{BASE_URL}/login` | Tela de login por token |
 
+## Versão e novidades no painel
+
+- A **versão instalada** aparece na navbar do dashboard (ao lado do botão **API**).
+- Quando sai uma versão mais nova, o painel mostra um **aviso** no badge de versão.
+- Ao entrar no dashboard, pode abrir um **modal com as novidades** da atualização (link para detalhes no GitHub).
+- O histórico completo de cada versão está no [CHANGELOG.md](./CHANGELOG.md).
+
+> As atualizações do software na sua instalação dependem da **assinatura ativa** e do canal pelo qual você recebe o KiraGo (hospedagem gerenciada, imagem fornecida pelo suporte, etc.). O aviso no painel informa que existe versão mais nova; a aplicação na sua infraestrutura segue o processo do seu plano.
+
 ## Autenticação
 
-Todas as rotas (exceto `/health`) exigem o header:
+Todas as rotas (exceto `/health` e páginas estáticas do painel) exigem o header:
 
 ```
 token: SEU_TOKEN
@@ -276,7 +298,9 @@ Content-Type: application/json
 | POST/GET/DELETE | `/session/rabbitmq/config` | Configuração de RabbitMQ |
 | POST | `/session/rabbitmq/test` | Testar conexão RabbitMQ |
 | POST/GET/DELETE | `/session/hmac/config` | Configuração de HMAC por sessão |
-| POST/GET/DELETE | `/session/proxy` | Configurar proxy de saída |
+| POST | `/session/proxy` | Configurar proxy manual de saída |
+| POST | `/session/proxy/webshare` | Ativar pool Webshare (API key / fonte compartilhada) |
+| GET | `/session/proxy/pool-config` | Listar fontes de pool Webshare |
 | POST | `/session/proxy/test` | Testar proxy |
 | GET/POST | `/session/skip` | Configurar eventos ignorados |
 
@@ -535,18 +559,19 @@ curl -s -X POST \
 
 ---
 
-## Licenças e atualizações
+## Licença e atualizações (assinatura)
 
-O KiraGo é licenciado por chave. O acesso à API e as atualizações dependem da licença ativa.
+O KiraGo é licenciado por chave (`KIRAGO_LICENSE_KEY`). Com a **assinatura ativa**, você mantém acesso à API e às **atualizações** dentro da janela do seu plano.
 
-Atualizações podem ser bloqueadas quando o build instalado estiver fora da janela de atualizações do plano. Ao renovar, o servidor revalida automaticamente.
+- **Dentro da janela:** você pode instalar as versões novas conforme o canal da sua assinatura (atualização automática, imagem enviada pelo suporte, etc.).
+- **Fora da janela:** o servidor continua funcionando na versão instalada; novas releases podem exigir renovação para aplicar.
+- **No painel:** o badge de versão avisa quando existe release mais recente — consulte o [CHANGELOG](./CHANGELOG.md) para ver o que mudou.
 
-## Como atualizar
+Se você hospeda por conta própria e sua assinatura inclui atualização de imagem, siga as orientações do suporte ou do canal onde recebe o KiraGo (não é necessário build manual para uso normal).
 
-```bash
-docker compose pull
-docker compose up -d
-```
+## Notas de versão
+
+Cada release está documentada em [CHANGELOG.md](./CHANGELOG.md). Releases publicadas: [GitHub — Kira-Go](https://github.com/luiis716/Kira-Go/releases).
 
 ## Suporte
 
