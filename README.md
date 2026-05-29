@@ -70,13 +70,20 @@ Crie um arquivo `.env` na mesma pasta do `docker-compose.yml`. Você pode copiar
 
 | Variável | Padrão | Descrição |
 |---|---|---|
-| `KIRAGO_GLOBAL_WEBHOOK` | — | URL de webhook global (recebe eventos de todos os usuários) |
-| `KIRAGO_GLOBAL_WEBHOOK_EVENTS` | — | Eventos a encaminhar para o webhook global, separados por vírgula (vazio = todos) |
+| `KIRAGO_GLOBAL_WEBHOOK` | — | URL que recebe eventos de **todas** as instâncias do servidor |
+| `KIRAGO_GLOBAL_WEBHOOK_EVENTS` | — | Nomes dos eventos separados por vírgula ([lista e significado de cada um](#eventos-de-webhook--o-que-é-cada-um)). **Vazio = todos** |
 | `WEBHOOK_FORMAT` | `json` | Formato do payload: `json` ou `form` |
-| `WEBHOOK_RETRY_ENABLED` | `true` | Ativa retry automático em falha de entrega |
+| `WEBHOOK_RETRY_ENABLED` | `true` | Ativa retry automático em falha de entrega (webhook por instância) |
 | `WEBHOOK_RETRY_COUNT` | `5` | Número de tentativas |
 | `WEBHOOK_RETRY_DELAY_SECONDS` | `30` | Intervalo entre tentativas (segundos) |
 | `WEBHOOK_ERROR_QUEUE_NAME` | `webhook_errors` | Fila RabbitMQ para webhooks com falha |
+
+Exemplo de webhook global no `.env` (lista de eventos na seção [Eventos de webhook](#eventos-de-webhook--o-que-é-cada-um)):
+
+```env
+KIRAGO_GLOBAL_WEBHOOK=https://seu-servidor.com/hook/global
+KIRAGO_GLOBAL_WEBHOOK_EVENTS=Message,GroupMessage,Connected,Disconnected,ReadReceipt
+```
 
 ### Variáveis de presença (WhatsApp)
 
@@ -365,147 +372,146 @@ Parâmetros:
 
 ---
 
-## Eventos de webhook
+## Eventos de webhook — o que é cada um
 
-O KiraGo tem dois tipos de webhook. Os eventos disponíveis são os mesmos em ambos, mas a forma de configurar é diferente:
+O webhook envia um **POST** para a sua URL sempre que algo acontece no WhatsApp. Você escolhe **quais tipos de aviso** quer receber — cada tipo tem um **nome fixo** (coluna **Evento**).
+
+Use esses nomes:
+
+- no **webhook global**: `KIRAGO_GLOBAL_WEBHOOK_EVENTS=Message,Connected,...` no `.env`
+- no **webhook da instância**: painel (checkboxes) ou `POST /webhook` com `"events": ["Message", "Connected"]`
+- para **receber tudo**: deixe `KIRAGO_GLOBAL_WEBHOOK_EVENTS` vazio (global) ou use `"All"` (instância)
+
+Abaixo, **o que cada evento seria** na prática — o que você está assinando para receber no seu sistema.
+
+### Mensagens
+
+| Evento | O que é este evento |
+|---|---|
+| `Message` | Aviso de **mensagem em chat individual** (texto, áudio, imagem, vídeo, documento, sticker, localização, etc.) — recebida ou enviada pelo número conectado. |
+| `GroupMessage` | Aviso de **mensagem em grupo** — o mesmo tipo de conteúdo da `Message`, mas em conversa de grupo. |
+| `UndecryptableMessage` | Aviso de que **chegou uma mensagem**, mas o KiraGo **não conseguiu ler/descriptografar** o conteúdo (útil para log e suporte). |
+| `Receipt` | Aviso de **confirmação de entrega/leitura** (equivalente ao `ReadReceipt`; nome legado na API). |
+| `ReadReceipt` | Aviso de que o contato **visualizou/leu** sua mensagem no chat individual (tique azul). |
+| `GroupReadReceipt` | Aviso de que **alguém leu** uma mensagem em um grupo. |
+| `MediaRetry` | Aviso de **nova tentativa** de baixar um arquivo de mídia que tinha falhado antes. |
+
+### Grupos e contatos
+
+| Evento | O que é este evento |
+|---|---|
+| `GroupInfo` | Aviso de que **algo mudou no grupo**: nome, descrição, foto, lista de participantes ou regras do grupo. |
+| `JoinedGroup` | Aviso de que o número conectado **entrou em um grupo novo**. |
+| `Picture` | Aviso de que a **foto de perfil** de um contato ou de um grupo foi alterada. |
+| `BlocklistChange` | Aviso de que um número foi **bloqueado ou desbloqueado** na lista de bloqueados. |
+| `Blocklist` | Envio da **lista completa** de números bloqueados (sincronização da blocklist). |
+
+### Conexão da instância
+
+| Evento | O que é este evento |
+|---|---|
+| `Connected` | Aviso de que a instância **está online** e conectada ao WhatsApp. |
+| `Disconnected` | Aviso de que a instância **caiu** (internet, reinício, desconexão temporária, etc.). |
+| `ConnectFailure` | Aviso de que **não foi possível conectar** (tentativa de login/conexão falhou). |
+| `LoggedOut` | Aviso de que a sessão foi **encerrada pelo WhatsApp** (ex.: desvinculou o aparelho no celular). |
+| `ClientOutdated` | Aviso de que o WhatsApp considera o **cliente desatualizado** — pode exigir atualização do KiraGo. |
+| `TemporaryBan` | Aviso de **restrição temporária** no número (banimento temporário do WhatsApp). |
+| `StreamError` | Aviso de **erro na conexão em tempo real** com os servidores do WhatsApp. |
+| `StreamReplaced` | Aviso de que **outro login** com o mesmo número tomou o lugar desta sessão. |
+| `KeepAliveTimeout` | Aviso de que a conexão **parou de responder** por um tempo (timeout). |
+| `KeepAliveRestored` | Aviso de que a conexão **voltou ao normal** depois de um timeout. |
+
+### QR Code e pareamento
+
+| Evento | O que é este evento |
+|---|---|
+| `QR` | Envio do **QR Code** (imagem/dados) para vincular o WhatsApp Web. |
+| `QRTimeout` | Aviso de que o **QR expirou** e é preciso gerar outro. |
+| `PairSuccess` | Aviso de que o **pareamento por código/número** deu certo. |
+| `PairError` | Aviso de **falha** no pareamento por código/número. |
+| `QRScannedWithoutMultidevice` | Aviso de que alguém escaneou o QR em um celular **sem suporte a multidevice** (pareamento pode falhar). |
+
+### Presença (online / digitando)
+
+| Evento | O que é este evento |
+|---|---|
+| `Presence` | Aviso de mudança de **status do contato** (online, offline, etc.) em nível geral. |
+| `ChatPresence` | Aviso de que o contato está **digitando** ou **gravando áudio** em um chat específico. |
+
+### Sincronização de dados
+
+| Evento | O que é este evento |
+|---|---|
+| `HistorySync` | Envio de **mensagens antigas** em lote (histórico ao conectar ou ao pedir sincronização). |
+| `AppState` | Aviso de mudança em **dados internos** do WhatsApp (contatos, listas, configurações sincronizadas). |
+| `AppStateSyncComplete` | Aviso de que a **sincronização desses dados terminou**. |
+| `OfflineSyncCompleted` | Aviso de que mensagens **pendentes offline** foram sincronizadas após voltar à internet. |
+| `OfflineSyncPreview` | Aviso com **resumo do que ainda falta** sincronizar antes de concluir o offline sync. |
+
+### Chamadas
+
+| Evento | O que é este evento |
+|---|---|
+| `CallOffer` | Aviso de **chamada de voz ou vídeo recebida**. |
+| `CallAccept` | Aviso de que a chamada foi **atendida**. |
+| `CallTerminate` | Aviso de que a chamada **terminou** (desligou). |
+| `CallOfferNotice` | Aviso/lembrete de chamada (notificação de chamada sem necessariamente atender). |
+| `CallRelayLatency` | Dados técnicos de **latência** da chamada (uso avançado / diagnóstico). |
+
+### Privacidade e perfil
+
+| Evento | O que é este evento |
+|---|---|
+| `PrivacySettings` | Aviso de alteração nas **configurações de privacidade** (quem vê foto, status, etc.). |
+| `PushNameSetting` | Aviso de que o **nome exibido** do seu número no WhatsApp mudou. |
+| `UserAbout` | Aviso de que o **recado/sobre** de um contato foi atualizado. |
+| `IdentityChange` | Aviso de que um contato **mudou de aparelho** (segurança/chave de identidade alterada). |
+| `CATRefreshError` | Aviso de **erro interno** ao renovar credenciais de autenticação com o WhatsApp. |
+
+### Canais (Newsletter)
+
+| Evento | O que é este evento |
+|---|---|
+| `NewsletterJoin` | Aviso de que o número **passou a seguir** um canal do WhatsApp. |
+| `NewsletterLeave` | Aviso de que o número **deixou de seguir** um canal. |
+| `NewsletterMuteChange` | Aviso de que um canal foi **silenciado ou reativado**. |
+| `NewsletterLiveUpdate` | Aviso de **nova publicação ou atualização ao vivo** em um canal que você segue. |
+
+### Meta / contas Business
+
+| Evento | O que é este evento |
+|---|---|
+| `FBMessage` | Aviso de mensagem recebida pela integração **Facebook / Meta** (cenários Business). |
+
+### Receber todos de uma vez
+
+| Evento | O que é este evento |
+|---|---|
+| `All` | Atalho para **inscrever em todos os eventos** da lista (no webhook por instância). No global, prefira deixar `KIRAGO_GLOBAL_WEBHOOK_EVENTS` vazio. |
+
+### Exemplos — o que colocar no webhook global
+
+| Se você quer… | Coloque em `KIRAGO_GLOBAL_WEBHOOK_EVENTS` |
+|---|---|
+| Só conversas privadas e leitura | `Message,ReadReceipt` |
+| Atendimento + saber se caiu a conexão | `Message,ReadReceipt,Connected,Disconnected` |
+| Incluir grupos | `Message,GroupMessage,GroupReadReceipt` |
+| Monitorar login e QR | `Connected,Disconnected,LoggedOut,QR,QRTimeout,PairSuccess` |
+| Tudo | *(deixe vazio)* |
+
+---
+
+## Webhook: instância × global
 
 | | Webhook da instância | Webhook global |
 |---|---|---|
-| **Escopo** | Por instância (usuário) | Servidor inteiro — recebe de todas as instâncias |
-| **Como configurar** | `POST /webhook` com `"events": [...]` | Env `KIRAGO_GLOBAL_WEBHOOK` + `KIRAGO_GLOBAL_WEBHOOK_EVENTS` |
-| **Filtro de eventos** | Campo `events` na requisição | `KIRAGO_GLOBAL_WEBHOOK_EVENTS` separado por vírgula |
-| **Payload extra** | `userID`, `instanceName` | `userID`, `instanceName` (igual) |
-| **HMAC** | Chave por instância (`POST /session/hmac/config`) | `KIRAGO_GLOBAL_HMAC_KEY` |
-| **Retry automático** | Sim (fila de outbox) | Não |
-
-> Use `"events": ["All"]` (instância) ou deixe `KIRAGO_GLOBAL_WEBHOOK_EVENTS` vazio (global) para receber todos os eventos sem filtro.
-
----
-
-### 💬 Mensagens
-
-| Evento | O que dispara |
-|---|---|
-| `Message` | Nova mensagem recebida ou enviada em conversa individual |
-| `GroupMessage` | Nova mensagem recebida ou enviada em grupo |
-| `UndecryptableMessage` | Mensagem que não foi possível descriptografar |
-| `Receipt` | Recibo de entrega de mensagem (alias de `ReadReceipt`) |
-| `ReadReceipt` | Confirmação de leitura de mensagem (tique azul) |
-| `GroupReadReceipt` | Confirmação de leitura em grupo |
-| `MediaRetry` | Tentativa de reenvio de mídia que falhou no download |
-
----
-
-### 👥 Grupos e contatos
-
-| Evento | O que dispara |
-|---|---|
-| `GroupInfo` | Alteração nas informações do grupo (nome, descrição, configurações, participantes) |
-| `JoinedGroup` | Instância entrou em um novo grupo |
-| `Picture` | Foto de perfil de contato ou grupo foi atualizada |
-| `BlocklistChange` | Um contato foi bloqueado ou desbloqueado |
-| `Blocklist` | Lista de bloqueados sincronizada completa |
-
----
-
-### 🔌 Sessão e conexão
-
-| Evento | O que dispara |
-|---|---|
-| `Connected` | Instância conectada com sucesso ao WhatsApp |
-| `Disconnected` | Instância desconectada (perda de conexão ou logout) |
-| `ConnectFailure` | Falha ao tentar conectar |
-| `LoggedOut` | Sessão encerrada pelo WhatsApp (deslogar do celular) |
-| `ClientOutdated` | Versão do cliente considerada desatualizada pelo WhatsApp |
-| `TemporaryBan` | Número banido temporariamente pelo WhatsApp |
-| `StreamError` | Erro no stream de conexão com o servidor do WhatsApp |
-| `StreamReplaced` | Stream substituído (outra sessão aberta com o mesmo número) |
-| `KeepAliveTimeout` | Timeout no keep-alive da conexão |
-| `KeepAliveRestored` | Conexão keep-alive restaurada após timeout |
-
----
-
-### 📷 QR e pareamento
-
-| Evento | O que dispara |
-|---|---|
-| `QR` | Novo QR Code gerado para parear o dispositivo |
-| `QRTimeout` | QR Code expirou sem ser escaneado |
-| `PairSuccess` | Pareamento concluído com sucesso |
-| `PairError` | Falha no pareamento do dispositivo |
-| `QRScannedWithoutMultidevice` | QR escaneado por um aparelho sem suporte a multidevice |
-
----
-
-### 👀 Presença
-
-| Evento | O que dispara |
-|---|---|
-| `Presence` | Mudança de presença de um contato (online/offline/digitando) |
-| `ChatPresence` | Contato está digitando ou gravando áudio em um chat |
-
----
-
-### 🔄 Sincronização
-
-| Evento | O que dispara |
-|---|---|
-| `HistorySync` | Sincronização de histórico de mensagens (ao conectar ou solicitar) |
-| `AppState` | Atualização do estado interno do app (listas, contatos, configurações) |
-| `AppStateSyncComplete` | Sincronização de estado do app concluída |
-| `OfflineSyncCompleted` | Sincronização offline concluída após reconexão |
-| `OfflineSyncPreview` | Preview de itens pendentes antes da sincronização offline |
-
----
-
-### 📞 Chamadas
-
-| Evento | O que dispara |
-|---|---|
-| `CallOffer` | Chamada recebida (voz ou vídeo) |
-| `CallAccept` | Chamada aceita pelo destinatário |
-| `CallTerminate` | Chamada encerrada |
-| `CallOfferNotice` | Aviso de chamada (notificação sem atender) |
-| `CallRelayLatency` | Informação de latência do relay da chamada |
-
----
-
-### ⚙️ Configurações e privacidade
-
-| Evento | O que dispara |
-|---|---|
-| `PrivacySettings` | Configurações de privacidade atualizadas (foto, recados, etc.) |
-| `PushNameSetting` | Nome de exibição do número atualizado |
-| `UserAbout` | Recado/status do contato atualizado |
-| `IdentityChange` | Chave de identidade de um contato foi alterada (troca de aparelho) |
-| `CATRefreshError` | Erro ao renovar token de autenticação interno |
-
----
-
-### 📢 Newsletter (Canais WhatsApp)
-
-| Evento | O que dispara |
-|---|---|
-| `NewsletterJoin` | Instância passou a seguir um canal |
-| `NewsletterLeave` | Instância deixou de seguir um canal |
-| `NewsletterMuteChange` | Silenciamento de um canal foi alterado |
-| `NewsletterLiveUpdate` | Nova publicação ou atualização ao vivo em um canal seguido |
-
----
-
-### 🌐 Meta / Facebook Bridge
-
-| Evento | O que dispara |
-|---|---|
-| `FBMessage` | Mensagem recebida via bridge Facebook/Meta (uso em contas Business) |
-
----
-
-### 🔮 Especial
-
-| Evento | O que dispara |
-|---|---|
-| `All` | Recebe todos os eventos acima sem exceção |
+| **Escopo** | Uma instância | Todas as instâncias do servidor |
+| **Como configurar** | Painel ou `POST /webhook` com `"events": [...]` | `.env`: `KIRAGO_GLOBAL_WEBHOOK` + `KIRAGO_GLOBAL_WEBHOOK_EVENTS` |
+| **Nomes dos eventos** | [Tabela acima](#eventos-de-webhook--o-que-é-cada-um) | Mesma tabela |
+| **Receber tudo** | `"events": ["All"]` | `KIRAGO_GLOBAL_WEBHOOK_EVENTS` vazio |
+| **Payload** | Dados do evento | Igual + `userID` e `instanceName` |
+| **HMAC** | Por instância | `KIRAGO_GLOBAL_HMAC_KEY` |
+| **Retry automático** | Sim | Não |
 
 ---
 
