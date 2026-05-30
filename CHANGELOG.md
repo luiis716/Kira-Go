@@ -1,162 +1,138 @@
 # Changelog 📌
 
-Formato inspirado no *Keep a Changelog*: cada versão lista mudanças em **Added / Changed / Fixed**.
+Notas de versão do KiraGo para **assinantes** — o que mudou no produto, no painel e na API do dia a dia.
 
-## [1.5] - 2026-05-04 (pre-release)
+Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.com/luiis716/Kira-Go/releases).
 
-### Release notes 🚀
+## [1.7] - 2026-05-28
 
-**Atualização KiraGo (Webhook global + documentação) — Versão 1.5**
+### O que há de novo 🚀
 
-Release focada em **controle fino de eventos no webhook global** e em **documentação de eventos em português** no README, para operação e integração mais previsíveis.
+**KiraGo 1.7 — Observação por instância**
 
-#### Destaques
-
-- **Filtro opcional no webhook global** — reduz ruído e carga no endpoint central quando você só precisa de um subconjunto de eventos (ex.: mensagens e sessão).
-- **README expandido** — todos os tipos de evento suportados documentados com *o que dispara*, agrupados por categoria, mais tabela **instância × global** (escopo, filtro, HMAC, retry).
+- **Observação interna** em cada instância (cliente, proxy, lembrete, etc.) — só no painel, não vai pro WhatsApp.
+- **Lista:** chip **Nota** e prévia no card quando houver texto.
+- **Dentro da instância:** **Ferramentas → Observação** para editar.
+- **Nova instância:** campo opcional na aba **Essencial**.
 
 ---
 
-### Added ✅
+## [1.6] - 2026-05-27
 
-- **Webhook global — filtro de eventos**
-  - Variável de ambiente `KIRAGO_GLOBAL_WEBHOOK_EVENTS`: lista separada por **vírgula**, mesmos nomes de evento do webhook por instância (`Message`, `GroupMessage`, `Connected`, …).
-  - Flag de linha de comando **`-globalwebhookevents`** com o mesmo formato (alternativa ao `.env`).
-  - **Comportamento:** string **vazia** ou ausente = **sem filtro** (encaminha **todos** os eventos, como antes).
-  - **Precedência:** se a flag **não** estiver vazia, ela vale; caso contrário usa-se `KIRAGO_GLOBAL_WEBHOOK_EVENTS` do ambiente.
-  - Nomes de evento **desconhecidos** na lista são **ignorados** (apenas tipos válidos entram no filtro); conferir logs na subida para ver o filtro efetivo.
+### O que há de novo 🚀
 
-- **README**
-  - Seção **Eventos de webhook** com tabelas por categoria (mensagens, grupos, sessão, QR, presença, sync, chamadas, newsletter, etc.).
-  - Tabela comparativa **Webhook da instância** × **Webhook global** (configuração, filtro, payload com `userID`/`instanceName`, HMAC, retry).
-  - Referência à variável `KIRAGO_GLOBAL_WEBHOOK_EVENTS` na tabela de variáveis de ambiente.
+**KiraGo 1.6 — Mais estável no WhatsApp, painel mais completo e proxy Webshare integrado**
 
-- **`kirago/.env.sample`**
-  - Chaves `KIRAGO_GLOBAL_WEBHOOK` e `KIRAGO_GLOBAL_WEBHOOK_EVENTS` documentadas no exemplo.
+#### Principais melhorias
 
-#### Exemplo rápido (`.env`)
+- **Grupos e mensagens mais estáveis** — promover, remover, adicionar participantes e enviar texto simples deixam de derrubar a sessão com tanta frequência.
+- **Versão visível no painel** — número da versão na barra superior; aviso quando existe atualização mais nova; modal com novidades ao entrar no dashboard.
+- **Proxy Webshare no painel** — configure só com a API key; o sistema escolhe o proxy; opção de compartilhar o pool entre instâncias sem repetir o mesmo IP ao mesmo tempo.
+- **Avatares das instâncias** — fotos aparecem nos cards mesmo com proxy ativo; atualização automática após reiniciar o servidor.
+- **Cards mais informativos** — selos (chips) mostram integrações ativas: Proxy, Webhook, Chatwoot, CRM, etc.
+
+---
+
+### Novidades ✅
+
+- **Badge de versão** na navbar do dashboard (ao lado do botão API).
+- **Aviso de atualização** quando uma versão mais nova está disponível (com link para as notas).
+- **Modal de novidades** ao logar no painel (uma vez por sessão do navegador).
+- **Proxy Webshare** no modal de Proxy de cada instância:
+  - Modo **pool** (só API key) ou **manual** (host/porta/usuário).
+  - **Compartilhar pool** com outras instâncias da mesma instalação.
+  - **Forçar rotação** para trocar de IP no pool.
+- **Avatares** carregados automaticamente nas instâncias conectadas.
+- **Chips de integração** nos cards (Proxy, Webhook, Chatwoot, Typebot, CRM, RabbitMQ, S3, HMAC).
+- **API de proxy Webshare** — `POST /session/proxy/webshare` e `GET /session/proxy/pool-config` (para automações que preferem API em vez do painel).
+- **Motor WhatsApp atualizado** — melhor compatibilidade com o protocolo atual do WhatsApp Web.
+
+### Correções 🔧
+
+- **Desconexão ao gerenciar grupos** (adicionar, remover, promover, renomear, sair) — a sessão aguarda mais tempo a reconexão em vez de cair na hora.
+- **Texto simples rejeitado pelo WhatsApp** — mensagens de texto sem link deixam de ser enviadas com tipo errado (`media/url`).
+- **Avatares sumindo no painel** — especialmente quem usa proxy; imagens passam a carregar pelo servidor da instância.
+- **Filtro de instâncias** no painel admin — não fica mais escondido atrás dos cards.
+- **Modal de proxy** — interruptor não desliga sozinho ao abrir; lista de instâncias fonte do pool carrega corretamente.
+- **Modal de novidades da versão** — rolagem e botões visíveis em telas menores.
+- **Grupos com JID inválido** — uso de número sem `@g.us` em rotas de grupo passa a retornar erro claro em vez de derrubar a conexão.
+- **Mensagem mais clara ao reconectar** — em alguns casos de instabilidade, a API responde pedindo para tentar de novo em alguns segundos (em vez de erro genérico).
+
+### Melhorias gerais ♻️
+
+- Painel mais rápido para identificar o que cada instância tem configurado (chips + avatares).
+- Reconexão após falhas de rede mais tolerante em operações demoradas.
+
+---
+
+## [1.5] - 2026-05-04
+
+### O que há de novo 🚀
+
+**KiraGo 1.5 — Webhook global com filtro de eventos**
+
+#### Principais melhorias
+
+- **Filtro no webhook global** — envie só os eventos que importam (ex.: `Message`, `Connected`) para o seu endpoint central, em vez de receber tudo.
+- **Documentação de eventos em português** — README com tabela de todos os eventos e o que cada um significa.
+
+---
+
+### Novidades ✅
+
+- Variável `KIRAGO_GLOBAL_WEBHOOK_EVENTS` — lista de eventos separados por vírgula para o webhook global (vazio = todos, como antes).
+- README com guia completo de eventos de webhook (instância × global).
+
+### Exemplo (`.env`)
 
 ```env
 KIRAGO_GLOBAL_WEBHOOK=https://seu-servidor.com/hook
 KIRAGO_GLOBAL_WEBHOOK_EVENTS=Message,GroupMessage,Connected
 ```
 
-Equivalente via CLI (quando preferir não usar `.env` para isso):
-
-```text
--globalwebhookevents=Message,GroupMessage,Connected
-```
-
----
-
-### Changed ♻️
-
-- ♻️ Documentação: README passa a ser a referência principal para **nomes e significados** dos eventos em PT‑BR (alinhado ao painel e ao `POST /webhook`).
-
-### Notas para quem faz deploy
-
-- O webhook global continua exigindo `KIRAGO_GLOBAL_WEBHOOK` (URL); o filtro **só** restringe **quais** eventos são enviados.
-- HMAC global (`KIRAGO_GLOBAL_HMAC_KEY`) e diferenças de retry em relação ao webhook por instância permanecem como descrito no README.
-
 ## [1.4] - 2026-04-14
 
-### Release notes 🚀
+### O que há de novo 🚀
 
-**Atualização KiraGo (CRM + Typebot + mídias + dashboard) — Versão 1.4**
+**KiraGo 1.4 — CRM, Typebot, GIF e painel renovado**
 
-Release focada em **integrações** (CRM e Typebot), **mídia/interativos** (incluindo GIF), **enquetes** e **usabilidade do painel**, com melhorias gerais de estabilidade e documentação.
+### Novidades ✅
 
-### Added ✅
-
-- **CRM (KiraGo):** configuração por instância (URL + token); envio inbound padronizado (texto, mídias, reação); sincronização de histórico em lotes (`HistoryBatch` / `POST /session/crm/sync-history`).
-- **Typebot:** fluxo 1:1 automático (mensagem → Typebot → resposta no WhatsApp); gatilhos por palavra-chave/operador; palavras de parada e controle de sessão.
-- **Mídia / interativos:** endpoint `POST /chat/send/gif`; GIF em headers de mensagens interativas (botões/carrossel) com conversão para MP4 quando necessário; melhor compatibilidade para imagem, vídeo, áudio e documento.
-- **Enquetes:** envio de poll via helper alinhado ao motor; melhor tratamento de **votos** no webhook.
-
-### Changed ♻️
-
-- ♻️ **Dashboard:** melhorias visuais e responsividade; UX em conexão / pair phone; organização de cards e integrações.
-- ♻️ **Webhook / eventos / sessão:** ajustes de fluxo e tratamento de erros.
-- ♻️ **Swagger / documentação:** continuidade de melhorias em PT‑BR.
-
-### Notas 🐳
-
-- Imagens Docker publicadas nesta linha: `ggdadds/kirago:1.4`, `ggdadds/kirago:latest` (conforme release no GitHub).
+- **CRM** por instância — URL + token; envio de mensagens recebidas/enviadas; sincronização de histórico em lotes.
+- **Typebot** — fluxo automático 1:1 (mensagem → bot → resposta no WhatsApp); gatilhos e palavras de parada.
+- **Envio de GIF** e melhorias em botões, carrossel, enquetes e mídias.
+- **Dashboard** — layout mais moderno, pair phone e cards de instância reorganizados.
 
 ## [1.3] - 2026-01-03
 
-### Release notes 🚀
+### O que há de novo 🚀
 
-**Atualização KiraGo (Chatwoot + Typebot + logs + webhook) — Versão 1.3**
+**KiraGo 1.3 — Chatwoot, Typebot, logs no painel e webhook mais confiável**
 
-Release focada em **automação de conversa** (Chatwoot e Typebot), **painel com logs**, **webhook mais resiliente** e atualização do motor WhatsApp.
+### Novidades ✅
 
-### Added ✅
-
-- **Chatwoot:** envio e recebimento de mensagens; reações; respostas (*reply*) com melhor mapeamento de mensagens; suporte a histórico e sincronização.
-- **Typebot:** fluxo automático entre WhatsApp e Typebot; configuração pelo painel; `public_id`, `base_url`, token e modo preview; gatilhos por palavra-chave e modos avançados; controle de expiração de sessão; mensagem de fallback; opções para reiniciar fluxo, manter sessão e responder no próprio número; mídia retornada pelo Typebot.
-- **Painel:** visualizador de logs de webhook (consulta de eventos, erros e entregas; melhor rastreabilidade).
-- **Webhook:** fila interna para entrega; **retry** com *backoff* exponencial; menos perda em falhas temporárias; envio em segundo plano mais controlado.
-
-### Changed ♻️
-
-- ♻️ **Docker:** build corrigido e estabilizado; melhor compatibilidade na geração da imagem.
-- ♻️ **Whatsmeow:** motor WhatsApp atualizado (conexão e eventos).
-- ♻️ Compatibilidade com banco e inicialização; organização dos fluxos internos de eventos entre painel, webhook, Chatwoot e Typebot.
-
-### Fixed 🛠️
-
-- 🛠️ Ajustes de integração entre painel, webhook, Chatwoot e Typebot (consolidação da linha 1.3).
-
-### Variáveis de ambiente (opcional) ⚙️
-
-- `WEBHOOK_RETRY_ENABLED` (`true` / `false`)
-- `WEBHOOK_RETRY_COUNT` (ex.: `5`)
-- `WEBHOOK_RETRY_DELAY_SECONDS` (ex.: `30`)
-- `WEBHOOK_ERROR_QUEUE_NAME` (ex.: `webhook_errors`)
+- **Chatwoot** — mensagens, reações, respostas e sincronização de histórico.
+- **Typebot** — configuração pelo painel, gatilhos, sessão, fallback e mídia nas respostas.
+- **Logs de webhook no painel** — consulte entregas e erros sem sair do dashboard.
+- **Webhook com retry** — novas tentativas automáticas em falhas temporárias (`WEBHOOK_RETRY_*` no `.env`).
 
 ## [1.2] - 2025-12-24
 
-### Release notes ✨
+### O que há de novo 🚀
 
-Atualização KiraGo (Painel + Webhook + Swagger) 🚀 Versão 1.2
+**KiraGo 1.2 — Webhook pausável, eventos de grupo e painel renovado**
 
-- 🔔 Webhook: botão “Ativo/pausado” (para de enviar sem apagar URL/eventos).
-- 👥 Webhook: separação de eventos de grupos (ex.: `GroupMessage`, `GroupReadReceipt`) mantendo a mesma URL.
-- 🧩 Painel: tela da instância mais moderna e responsiva (cards, ações rápidas e layout melhor).
-- 📚 API (/api): Swagger mais amigável em PT‑BR e tema escuro consistente (inclui modal “Autorizar”).
-- 🧪 `develop.html`: protótipo de Gerenciador de Intenções (para desenvolvimento).
-
-### Added ✅
-- ✅ Webhook: flag `webhook_active` com persistência (pausar/retomar envio sem desconfigurar).
-- ✅ Webhook: novos tipos de evento para grupos e campo `isGroup` em confirmações.
-- ✅ Swagger: “Ajuda rápida” e melhorias de usabilidade (filtro, persistência de autorização, labels PT‑BR).
-
-### Changed ♻️
-- ♻️ Webhook: envio agora respeita `webhook_active` (quando desativado, não dispara).
-- ♻️ Painel: reorganização visual da página da instância (mais clean e profissional).
-
-### Fixed 🛠️
-- 🛠️ Banco: compatibilidade ao iniciar com banco antigo (cria a coluna `webhook_active` quando faltar).
-- 🛠️ Swagger: correções de contraste em modo escuro (“No parameters”, cabeçalhos e modal de autorização).
+- Webhook **ativo/pausado** sem perder URL e eventos configurados.
+- Eventos de **grupo** separados (`GroupMessage`, `GroupReadReceipt`, etc.).
+- Painel da instância mais moderno; Swagger em PT‑BR com tema escuro.
 
 ## [1.1] - 2025-12-20
 
-### Release notes 🚀
+### O que há de novo 🚀
 
-Atualização KiraGo (Painel/WhatsApp) — Versão 1.1
+**KiraGo 1.1 — Painel e webhook mais fáceis de usar**
 
-- 🔔 Webhook: modal reorganizado (URL em primeiro) e eventos por categorias em checkboxes (bem melhor no tema escuro).
-- 🧩 Criar instância: seleção de eventos do webhook também virou checkboxes.
-- 🔗 Conexão: botão “Desconectar” funciona mesmo quando está só no QR Code (antes de logar).
-- 🗂️ S3/Mídia: corrigido bug de cache que às vezes ignorava `media_delivery` (base64/s3/both).
-- 🔒 Licença/Atualizações: validação da janela de updates usando a data do build.
-
-### Changed ♻️
-- Dashboard: seleção de eventos do webhook passou de *select* para checkboxes (categorias + tema escuro).
-- Modais: reorganização do webhook (URL em primeiro) e ajuste de layout.
-- Licença/updates: validação por data do build e janela de updates do plano.
-
-### Fixed 🛠️
-- Sessão: desconectar funciona mesmo durante QR/login (pairing).
-- Mídia/S3: cache passou a considerar `media_delivery`/`s3_enabled` corretamente.
+- Webhook com eventos em **checkboxes por categoria** (tema escuro).
+- **Desconectar** funciona mesmo na tela de QR (antes de concluir o login).
+- Correção no envio de mídia com S3/base64 conforme a configuração da instância.
+- Licença e janela de atualizações validadas pela data do build do seu plano.
