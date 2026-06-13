@@ -1,0 +1,23 @@
+{
+  "services": [
+    {
+      "type": "app",
+      "data": {
+        "projectName": "kirago",
+        "serviceName": "kirago-api",
+        "source": {
+          "type": "image",
+          "image": "ggdadds/kirago:latest"
+        },
+        "domains": [
+          {
+            "host": "$(EASYPANEL_DOMAIN)",
+            "port": 8080
+          }
+        ],
+        "env": "KIRAGO_ADMIN_TOKEN=JSD786SD6SD6S7D6S7DS\nDB_USER=postgres\nDB_PASSWORD=senha aqui \nDB_NAME=kirago-teste\nDB_HOST=host aqui\nDB_PORT=5432\nTZ=America/Sao_Paulo\nWEBHOOK_FORMAT=json\nSESSION_DEVICE_NAME=KiraGo\nKIRAGO_LICENSE_KEY= sua licença aqui \nKIRAGO_EVENT_LOG=true\nKIRAGO_PROXY_FAILOPEN=true\nKIRAGO_PROXY_FAILOPEN_COOLDOWN_SECONDS=300"
+      }
+    }
+  ]
+}
+

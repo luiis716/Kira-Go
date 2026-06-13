@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  kirago-server:
+    image: ggdadds/kirago:develop
+    environment:
+      - KIRAGO_ADMIN_TOKEN=CHANGE_ME_ADMIN_TOKEN # Obrigatório para acessa painel
+      - KIRAGO_LICENSE_KEY=CHANGE_ME_LICENSE_KEY # Obrigatório para api
+
+      - TZ=America/Sao_Paulo
+      - WEBHOOK_FORMAT=json
+      - SESSION_DEVICE_NAME=KiraGo
+
+      - DB_USER=postgres
+      - DB_PASSWORD=7638736476d6d376d
+      - DB_NAME=kirago
+      - DB_HOST=kirago-db
+      - DB_PORT=5432
+      - DB_SSLMODE=false
+
+    networks:
+      - kirago #sua rede
+
+    # Se você usa Traefik, isso pode ser opcional.
+    # Com Traefik, normalmente você NÃO precisa expor 8080 publicamente.
+    ports:
+      - "8080:8080"
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.kirago.rule=Host(`teste.com`)
+      - traefik.http.routers.kirago.entrypoints=websecure
+      - traefik.http.routers.kirago.tls=true
+      - traefik.http.services.kirago.loadbalancer.server.port=8080
+
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 0
+
+  kirago-db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 7638736476d6d376d
+      POSTGRES_DB: kirago
+
+    volumes:
+      - kirago-db-data:/var/lib/postgresql/data
+
+    networks:
+      - kirago #sua rede
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 0
+
+networks:
+  kirago:
+    external: true
+
+volumes:
+  kirago-db-data:
