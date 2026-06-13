@@ -4,16 +4,54 @@ Notas de versão do KiraGo para **assinantes** — o que mudou no produto, no pa
 
 Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.com/luiis716/Kira-Go/releases).
 
-## [1.7] - 2026-05-28
+## [1.7] - 2026-06-10
 
 ### O que há de novo 🚀
 
-**KiraGo 1.7 — Observação por instância**
+**KiraGo 1.7 — Observação por instância, múltiplos webhooks, pools Webshare e painel renovado**
+
+#### Principais melhorias
 
 - **Observação interna** em cada instância (cliente, proxy, lembrete, etc.) — só no painel, não vai pro WhatsApp.
-- **Lista:** chip **Nota** e prévia no card quando houver texto.
-- **Dentro da instância:** **Ferramentas → Observação** para editar.
-- **Nova instância:** campo opcional na aba **Essencial**.
+- **Vários webhooks por instância** — cada um com nome, URL, eventos e status ativo/pausado; o WhatsApp assina a **união** dos eventos de todos os webhooks ativos.
+- **Pools Webshare nomeados (admin)** — cadastre várias contas Webshare no painel; cada instância escolhe qual pool usar no modal de Proxy.
+- **Painel reorganizado** — lista de instâncias e página interna da instância; card **Webhooks** com resumo; modal **Gerenciar Webhooks** (lista, criar, editar, pausar, excluir).
+
+---
+
+### Novidades ✅
+
+#### Observação por instância
+
+- Chip **Nota** e prévia no card da lista quando houver texto.
+- **Ferramentas → Observação** dentro da instância para editar.
+- Campo opcional na aba **Essencial** ao criar nova instância.
+
+#### Webhooks (multi)
+
+- **API** — `GET/POST /webhooks` e `PUT/DELETE /webhooks/{id}` (header `token` da instância).
+- Cada webhook: `name`, `url`, `events[]`, `active` (pausar sem apagar).
+- **Compatibilidade:** rotas legadas `GET/POST/PUT/DELETE /webhook` continuam no webhook **Principal** (migrado automaticamente do campo único antigo).
+- **Disparo:** cada evento vai para **todas** as URLs ativas que assinam aquele tipo; retry na outbox por URL.
+- **Painel:** chips de eventos, atalhos (Mensagens, Conexão, Todos, Limpar), botões Salvar/Cancelar fixos no rodapé do modal.
+
+#### Proxy — pools Webshare (admin)
+
+- **API admin** — `GET/POST /admin/proxy/webshare/pools`, `PUT/DELETE /admin/proxy/webshare/pools/{id}`.
+- Vários pools com **nome** e **API key**; esquema HTTP/SOCKS5 por pool.
+- **Por instância:** `GET /session/proxy/pool-config` e `POST /session/proxy/webshare` com `pool_id`.
+- **Painel admin:** modal **Pools Webshare** na lista de instâncias (criar, editar, trocar key, remover).
+- Rotas legadas `GET/POST /admin/proxy/webshare` mantidas.
+
+### Correções 🔧
+
+- **Crash `concurrent map read and map write`** com várias requisições em paralelo no painel da instância.
+- **Card Webhooks** não fica mais preso em *Carregando…* a cada poll de status.
+- **Modal de webhooks** — rolagem e botões **Salvar** / **Adicionar** sempre visíveis.
+
+### Melhorias gerais ♻️
+
+- Documentação README atualizada (multi-webhook + pools).
 
 ---
 
