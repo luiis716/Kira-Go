@@ -78,6 +78,8 @@ Crie um arquivo `.env` na mesma pasta do `docker-compose.yml`. Você pode copiar
 | `WEBHOOK_RETRY_DELAY_SECONDS` | `30` | Intervalo entre tentativas (segundos) |
 | `WEBHOOK_ERROR_QUEUE_NAME` | `webhook_errors` | Fila RabbitMQ para webhooks com falha |
 
+**Webhooks por instância** não usam variável de ambiente: configure no painel (**Gerenciar Webhooks**) ou pela API `GET/POST /webhooks`. O webhook global do `.env` é independente e continua recebendo eventos de **todas** as instâncias.
+
 Exemplo de webhook global no `.env` (lista de eventos na seção [Eventos de webhook](#eventos-de-webhook--o-que-é-cada-um)):
 
 ```env
@@ -106,18 +108,34 @@ KIRAGO_GLOBAL_WEBHOOK_EVENTS=Message,GroupMessage,Connected,Disconnected,ReadRec
 | `KIRAGO_PROXY_FAILOPEN` | `false` | Ao detectar falha no proxy, desativa-o e reconecta direto pela VPS |
 | `KIRAGO_PROXY_FAILOPEN_COOLDOWN_SECONDS` | `300` | Cooldown (segundos) entre tentativas de fail-open por sessão |
 
+#### Pools Webshare (admin)
+
+Na **lista de instâncias** (login admin), abra **Pools Webshare** para cadastrar uma ou mais contas [Webshare](https://www.webshare.io/):
+
+| Campo | Descrição |
+|---|---|
+| **Nome** | Identificação no painel (ex.: *Conta principal*, *Revenda SP*) |
+| **API key** | Chave da conta Webshare desse pool |
+| **Esquema** | `http` ou `socks5` |
+
+Cada instância escolhe **qual pool** usar no modal **Proxy** — não é mais necessário colar a API key em cada instância se os pools já estiverem cadastrados pelo admin.
+
+**API (admin):** `GET/POST /admin/proxy/webshare/pools`, `PUT/DELETE /admin/proxy/webshare/pools/{id}`.
+
 #### Proxy no painel (por instância)
 
 No dashboard, abra a instância → **Proxy**:
 
 | Modo | O que você faz |
 |---|---|
-| **Webshare (pool)** | Cole a API key da [Webshare](https://www.webshare.io/). O KiraGo escolhe um proxy da sua lista automaticamente. |
+| **Webshare (pool)** | Selecione um **pool nomeado** cadastrado pelo admin (ou informe API key direto, se preferir). O KiraGo escolhe um proxy da lista Webshare automaticamente. |
 | **Manual** | Informe host, porta, usuário e senha (SOCKS5 ou HTTP). |
 
-**Compartilhar pool:** em uma instância, ative *compartilhar pool* para outras instâncias usarem a mesma conta Webshare. Cada instância recebe um IP diferente — não há dois números no mesmo proxy ao mesmo tempo.
+**Compartilhar pool (legado):** instâncias ainda podem referenciar pool de outra instância via `source_user_id`; o modo recomendado é usar **pools nomeados** no admin.
 
-**Trocar proxy:** use *forçar rotação* no modal para pegar outro IP do pool.
+**Trocar IP:** use *forçar rotação* no modal para pegar outro proxy do pool selecionado.
+
+**Fail-open:** com `KIRAGO_PROXY_FAILOPEN=true`, falha no proxy desativa-o temporariamente e a sessão reconecta direto pela VPS (ver tabela de variáveis acima).
 
 ### Variáveis de RabbitMQ
 
@@ -177,13 +195,27 @@ Content-Type: application/json
 | POST | `/session/pairphone` | Parear por número de telefone |
 | GET/POST | `/session/history` | Solicitar sincronização de histórico |
 
-### Webhook
+### Webhook (por instância)
+
+Cada instância pode ter **vários webhooks**. Cada um tem nome, URL, lista de eventos e flag `active`. Eventos recebidos no WhatsApp são enviados para **todas** as URLs ativas que assinam aquele tipo.
+
 | Método | Rota | Descrição |
 |---|---|---|
-| POST | `/webhook` | Configurar webhook |
-| GET | `/webhook` | Obter configuração atual |
-| PUT | `/webhook` | Atualizar configuração |
-| DELETE | `/webhook` | Remover webhook |
+| GET | `/webhooks` | Listar todos os webhooks da instância |
+| POST | `/webhooks` | Criar webhook (`name`, `webhookurl`, `events`, `active`) |
+| PUT | `/webhooks/{id}` | Atualizar webhook (parcial ou completo) |
+| DELETE | `/webhooks/{id}` | Excluir webhook |
+
+**Legado (webhook único “Principal”):**
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/webhook` | Obter webhook Principal |
+| POST | `/webhook` | Criar/atualizar Principal |
+| PUT | `/webhook` | Atualizar Principal |
+| DELETE | `/webhook` | Remover Principal |
+
+No painel: card **Webhooks** na instância → **Gerenciar Webhooks** (lista + formulário).
 
 ### Envio de mensagens
 | Método | Rota | Descrição |
@@ -306,8 +338,8 @@ Content-Type: application/json
 | POST | `/session/rabbitmq/test` | Testar conexão RabbitMQ |
 | POST/GET/DELETE | `/session/hmac/config` | Configuração de HMAC por sessão |
 | POST | `/session/proxy` | Configurar proxy manual de saída |
-| POST | `/session/proxy/webshare` | Ativar pool Webshare (API key / fonte compartilhada) |
-| GET | `/session/proxy/pool-config` | Listar fontes de pool Webshare |
+| POST | `/session/proxy/webshare` | Ativar Webshare (`pool_id`, `enable`, `force_rotate`, …) |
+| GET | `/session/proxy/pool-config` | Listar pools Webshare disponíveis e pool atual da instância |
 | POST | `/session/proxy/test` | Testar proxy |
 | GET/POST | `/session/skip` | Configurar eventos ignorados |
 
@@ -316,6 +348,9 @@ Content-Type: application/json
 |---|---|---|
 | GET/POST | `/admin/users` | Listar / criar usuários |
 | PUT/DELETE | `/admin/users/{id}` | Editar / remover usuário |
+| GET/POST | `/admin/proxy/webshare/pools` | Listar / criar pools Webshare nomeados |
+| PUT/DELETE | `/admin/proxy/webshare/pools/{id}` | Editar / remover pool |
+| GET/POST | `/admin/proxy/webshare` | Legado — primeiro pool da lista |
 
 ### Utilitários
 | Método | Rota | Descrição |
@@ -503,15 +538,19 @@ Abaixo, **o que cada evento seria** na prática — o que você está assinando 
 
 ## Webhook: instância × global
 
-| | Webhook da instância | Webhook global |
+| | Webhook(s) da instância | Webhook global |
 |---|---|---|
-| **Escopo** | Uma instância | Todas as instâncias do servidor |
-| **Como configurar** | Painel ou `POST /webhook` com `"events": [...]` | `.env`: `KIRAGO_GLOBAL_WEBHOOK` + `KIRAGO_GLOBAL_WEBHOOK_EVENTS` |
+| **Escopo** | Uma instância (várias URLs) | Todas as instâncias do servidor |
+| **Quantidade** | Ilimitado via `GET/POST /webhooks` | Uma URL no `.env` |
+| **Como configurar** | Painel **Gerenciar Webhooks** ou API `/webhooks` | `.env`: `KIRAGO_GLOBAL_WEBHOOK` + `KIRAGO_GLOBAL_WEBHOOK_EVENTS` |
 | **Nomes dos eventos** | [Tabela acima](#eventos-de-webhook--o-que-é-cada-um) | Mesma tabela |
-| **Receber tudo** | `"events": ["All"]` | `KIRAGO_GLOBAL_WEBHOOK_EVENTS` vazio |
+| **Receber tudo** | `"events": ["All"]` em um ou mais webhooks | `KIRAGO_GLOBAL_WEBHOOK_EVENTS` vazio |
+| **Disparo** | POST para cada URL ativa que assina o evento | POST único no servidor global |
+| **Pausar sem apagar** | `"active": false` no webhook | — |
 | **Payload** | Dados do evento | Igual + `userID` e `instanceName` |
 | **HMAC** | Por instância | `KIRAGO_GLOBAL_HMAC_KEY` |
-| **Retry automático** | Sim | Não |
+| **Retry automático** | Sim (por URL na outbox) | Não |
+| **API legada** | `POST /webhook` = webhook **Principal** | — |
 
 ---
 
@@ -543,7 +582,25 @@ curl -s -X POST \
   "{BASE_URL}/chat/send/text"
 ```
 
-### Configurar webhook
+### Listar webhooks da instância
+
+```bash
+curl -s -X GET \
+  -H "token: SEU_TOKEN" \
+  "{BASE_URL}/webhooks"
+```
+
+### Criar webhook (ex.: CRM + N8N)
+
+```bash
+curl -s -X POST \
+  -H "token: SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"name":"N8N","webhookurl":"https://n8n.exemplo.com/webhook/abc","events":["Message","GroupMessage"],"active":true}' \
+  "{BASE_URL}/webhooks"
+```
+
+### Configurar webhook Principal (legado)
 
 ```bash
 curl -s -X POST \
@@ -551,6 +608,26 @@ curl -s -X POST \
   -H "Content-Type: application/json" \
   --data '{"webhookurl":"https://seuapp.com/webhook","events":["Message","ReadReceipt","Connected"]}' \
   "{BASE_URL}/webhook"
+```
+
+### Ativar pool Webshare em uma instância
+
+```bash
+curl -s -X POST \
+  -H "token: SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"enable":true,"pool_id":"ID_DO_POOL_NO_ADMIN"}' \
+  "{BASE_URL}/session/proxy/webshare"
+```
+
+### Cadastrar pool Webshare (admin)
+
+```bash
+curl -s -X POST \
+  -H "Authorization: SEU_KIRAGO_ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"name":"Conta principal","api_key":"SUA_WEBSHARE_API_KEY","scheme":"http"}' \
+  "{BASE_URL}/admin/proxy/webshare/pools"
 ```
 
 ### Configurar CRM
@@ -578,6 +655,8 @@ Se você hospeda por conta própria e sua assinatura inclui atualização de ima
 ## Notas de versão
 
 Cada release está documentada em [CHANGELOG.md](./CHANGELOG.md). Releases publicadas: [GitHub — Kira-Go](https://github.com/luiis716/Kira-Go/releases).
+
+**Versão atual (documentada):** [1.7](./CHANGELOG.md#17---2026-06-10) — observação por instância, múltiplos webhooks, pools Webshare no admin e painel renovado.
 
 ## Suporte
 
