@@ -4,6 +4,66 @@ Notas de versão do KiraGo para **assinantes** — o que mudou no produto, no pa
 
 Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.com/luiis716/Kira-Go/releases).
 
+## [1.8] - 2026-07-01
+
+### O que há de novo 🚀
+
+**KiraGo 1.8 — Pareamento passkey, motor WhatsApp atualizado e instância com pool Webshare em um passo**
+
+#### Principais melhorias
+
+- **Pareamento por passkey (WebAuthn)** — suporte ao novo fluxo do WhatsApp além do QR; API e webhooks para integrar no seu front-end.
+- **Motor WhatsApp (whatsmeow) atualizado** — proto mais recente, pareamento QR mais estável e preparação para contas que exigem passkey.
+- **Criar instância já com pool Webshare** — em um único `POST /admin/users` com `webshareConfig`; o sistema escolhe um IP livre do pool na hora.
+- **Documentação Swagger (`/api`)** — endpoints de pools Webshare, proxy por instância e passkey documentados no painel API.
+
+---
+
+### Novidades ✅
+
+#### Pareamento passkey
+
+- **API** — `GET /session/passkey`, `POST /session/passkey/response`, `POST /session/passkey/confirm`.
+- **Webhooks** — `PairPasskeyRequest`, `PairPasskeyConfirmation`, `PairPasskeyError` (assináveis como os demais eventos).
+- **Status** — `GET /session/status` inclui campo `passkey` com a fase atual (`request`, `confirmation` ou vazio).
+- Fluxo QR tradicional **continua igual**; passkey é caminho alternativo quando o WhatsApp solicitar.
+
+#### Proxy Webshare — criação de instância
+
+- **`POST /admin/users`** aceita `webshareConfig: { "enabled": true, "pool_id": "..." }` — vincula pool e proxy na criação (sem 3º passo).
+- **Painel — Nova instância:** ao ativar proxy, escolha **Pool Webshare** (recomendado) ou **URL manual**; lista os pools cadastrados pelo admin.
+- Não use `proxyConfig` e `webshareConfig` juntos na mesma requisição.
+
+#### API / Swagger (`/api`)
+
+- **Admin** — `GET/POST /admin/proxy/webshare/pools`, `PUT/DELETE /admin/proxy/webshare/pools/{id}`.
+- **Sessão** — `GET /session/proxy/pool-config`, `POST /session/proxy/webshare`.
+- **Passkey** — rotas de pareamento documentadas com exemplos.
+- **`POST /admin/users`** — descrição e exemplo atualizados para `webshareConfig`.
+
+#### Motor WhatsApp
+
+- Atualização para whatsmeow com suporte a **passkeys** e proto **v1042386815**.
+- Evento **`NotifyAccountReachoutTimelock`** — alerta de restrição/timelock da conta (webhook).
+- Pareamento QR: ignora `connect success` antes do pairing concluir (mais estável).
+- Log de `PairSuccess` passa a incluir **LID**.
+
+---
+
+### Correções 🔧
+
+- **Chatwoot** — evita criar várias caixas de entrada ao receber mensagens (reutiliza inbox existente; não recria em erro de rede).
+- **Botões com imagem** — título no header, `ViewOnce` desligado em botões (evita sumir título / travar WhatsApp Web).
+- **Download de imagem em botões** — contorna bloqueio 403 de CDN no envio server-side.
+- **Modal de licença** — PIX visível para renovação antecipada; QR some após confirmação do pagamento; modal com rolagem em telas menores.
+
+### Melhorias gerais ♻️
+
+- Helper interno `applyWebsharePoolToUser` — mesma lógica de atribuição de IP na criação da instância e em `POST /session/proxy/webshare`.
+- README e exemplos de API alinhados ao fluxo pool → instância em um ou dois passos.
+
+---
+
 ## [1.7] - 2026-06-10
 
 ### O que há de novo 🚀
