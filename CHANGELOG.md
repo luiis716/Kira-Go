@@ -34,7 +34,14 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
 - Botão **Autenticar com passkey** (WebAuthn no navegador, HTTPS) e **Confirmar pareamento** com o código `XXXX-X`.
 - Se `skipHandoffUX` vier ativo, a confirmação pode ser enviada sem mostrar o código.
 
+#### API
 
+- **`POST /user/check`** — `Users[].PhoneNumber` (opcional); `JID` pode ser `@lid`.
+- Swagger (`/api`) atualizado com o exemplo LID/PN.
+
+### Correções 🔧
+
+- **Badge de atualização no painel** — compara a versão instalada com a do GitHub de forma mais estável (sem aviso falso de “nova versão” quando você já está atualizado).
 
 ### Como atualizar ♻️
 
@@ -44,6 +51,7 @@ docker pull ggdadds/kirago:1.8.1
 docker pull ggdadds/kirago:latest
 ```
 
+Reinicie o container e confira `GET /health` (`version` ≈ `1.8.1`, `update_available: false`). No painel, use **Ctrl+Shift+R** para carregar a tela nova do passkey.
 
 ---
 
