@@ -35,10 +35,6 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
 - Se `skipHandoffUX` vier ativo, a confirmação pode ser enviada sem mostrar o código.
 
 
-### Correções 🔧
-
-- **Versão no `/health` e no badge do painel** — build Docker lê a versão de `build_info.go` (não fica preso em 1.7 se a tag da imagem for 1.8).
-- **`KIRAGO_VERSION` / `KIRAGO_BASE_RELEASE`** — sobrescrevem a versão em runtime quando necessário (VPS sem rebuild).
 
 ### Como atualizar ♻️
 
