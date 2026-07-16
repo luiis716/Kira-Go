@@ -4,6 +4,58 @@ Notas de versão do KiraGo para **assinantes** — o que mudou no produto, no pa
 
 Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.com/luiis716/Kira-Go/releases).
 
+## [1.8.1] - 2026-07-16
+
+### O que há de novo 🚀
+
+**KiraGo 1.8.1 — Motor WhatsApp atualizado (LID), passkey no painel e `/user/check` com número PN**
+
+#### Principais melhorias
+
+- **Motor WhatsApp (whatsmeow) atualizado** — proto **v1043045417**, envio de DM sempre via LID, checagem de número mais estável e reject de chamada corrigido.
+- **Passkey no painel** — se o WhatsApp pedir verificação após o QR, o modal aparece sozinho (autenticar / confirmar código). QR e código por telefone **não mudam**.
+- **`POST /user/check`** — passa a devolver `PhoneNumber` (PN `@s.whatsapp.net`) quando o `JID` vier como `@lid`.
+
+---
+
+### Novidades ✅
+
+#### Motor WhatsApp
+
+- Proto / versão do cliente: **v1043045417**.
+- **Envio de DM** — destino convertido para LID automaticamente (melhor entrega no modelo atual do WhatsApp).
+- **`IsOnWhatsApp` / `/user/check`** — query LID, mapeamento LID↔PN e campo **`PhoneNumber`** na resposta.
+- **Reject de chamada** — remove `tctoken` que podia falhar o rejeite (skip automático e `POST /call/reject`).
+- Pareamento: `PairSuccess` / `PairError` podem incluir props do cliente (sem mudança obrigatória no seu webhook).
+
+#### Painel — passkey
+
+- Modal automático quando `status.passkey` está em `request` ou `confirmation`.
+- Botão **Autenticar com passkey** (WebAuthn no navegador, HTTPS) e **Confirmar pareamento** com o código `XXXX-X`.
+- Se `skipHandoffUX` vier ativo, a confirmação pode ser enviada sem mostrar o código.
+
+#### API
+
+- **`POST /user/check`** — `Users[].PhoneNumber` (opcional); `JID` pode ser `@lid`.
+- Swagger (`/api`) atualizado com o exemplo LID/PN.
+
+### Correções 🔧
+
+- **Versão no `/health` e no badge do painel** — build Docker lê a versão de `build_info.go` (não fica preso em 1.7 se a tag da imagem for 1.8).
+- **`KIRAGO_VERSION` / `KIRAGO_BASE_RELEASE`** — sobrescrevem a versão em runtime quando necessário (VPS sem rebuild).
+
+### Como atualizar ♻️
+
+```bash
+docker pull ggdadds/kirago:1.8.1
+# ou
+docker pull ggdadds/kirago:latest
+```
+
+Reinicie o container e confira `GET /health` (`version` ≈ `1.8.1`, `update_available: false`). No painel, use **Ctrl+Shift+R** para carregar o JS novo do passkey.
+
+---
+
 ## [1.8] - 2026-07-01
 
 ### O que há de novo 🚀
