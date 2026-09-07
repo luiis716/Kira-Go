@@ -4,6 +4,118 @@ Notas de versão do KiraGo para **assinantes** — o que mudou no produto, no pa
 
 Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.com/luiis716/Kira-Go/releases).
 
+## [1.12] - 2026-09-07
+
+### O que há de novo 🚀
+
+**KiraGo 1.12 — Motor WhatsApp atualizado, botões native flow e assistente no painel**
+
+#### Principais melhorias
+
+- **Reconnect mais confiável** — erros de stream são tratados antes de reconectar, evitando sessão “presa”.
+- **Noise socket** — context correto nos frames (mais estabilidade na conexão).
+- **Histórico / ParseWebMessage** — identificação correta do próprio número (own ID).
+- **Download de thumbnails** — ignora `mediaKey` inválida em mídia sem criptografia (menos falha ao baixar preview).
+- **Grupos** — motivo de exclusão de membro fica opcional.
+- **Protos** atualizados para o WhatsApp Web recente (v1046691727).
+- **Botões (`/chat/send/buttons`)** alinhados à referência native flow (reply legado, CTAs, webview).
+- **Assistente no dashboard** — bolinha com templates de JSON; com API key, também Groq/OpenAI/Anthropic.
+
+---
+
+### Novidades ✅
+
+#### Conexão WhatsApp
+
+- Stream error processado antes do auto-reconnect.
+- Context correto no handshake/noise socket.
+- Cliente alinhado à versão mais recente do protocolo.
+
+#### Mensagens e mídia
+
+- Correção do own ID ao interpretar mensagens web/histórico.
+- Download de thumbnail sem chave de criptografia inválida.
+- **`POST /chat/send/buttons`**:
+  - reply puro (máx. 3) via `ButtonsMessage` legado (melhor render no iOS/Android);
+  - CTAs (url/copy/call/webview/PIX) via `InteractiveMessage` direto;
+  - validação: reply não mistura com CTA/PIX;
+  - webview em botão URL (`ButtonWebview` / `WebviewPresentation` / `Type=webview`);
+  - stanza `<native_flow v="9" name="mixed">` (sem `biz_bot` em contas pessoais).
+
+#### Painel
+
+- **Assistente KiraGo** (bolinha em `/dashboard/instances` e `/dashboard/instance`):
+  - ligado por `KIRAGO_ASSISTANT_ENABLED=true`;
+  - sem key: templates/FAQ (botões, webview, PIX, lista, carrossel…);
+  - com `KIRAGO_ASSISTANT_API_KEY`: híbrido + LLM (`groq` | `openai` | `anthropic`).
+
+#### Grupos
+
+- Delete de participante aceita motivo opcional.
+
+### Como atualizar ♻️
+
+```bash
+docker pull ggdadds/kirago:1.12
+# ou
+docker pull ggdadds/kirago:latest
+```
+
+Reinicie o container e confira `GET /health` (`version` ≈ `1.12`, `update_available: false`).
+
+---
+
+## [1.11] - 2026-08-26
+
+### O que há de novo 🚀
+
+**KiraGo 1.11 — Motor WhatsApp mais estável, webhook com dados da instância e painel sem “modais fantasma”**
+
+#### Principais melhorias
+
+- **Motor WhatsApp atualizado** — fila de eventos por conexão (reconnect mais limpo), download de mídia sem chave inválida e protos alinhados ao WhatsApp Web recente.
+- **Blocklist com LID** — `POST /user/block` usa o identificador LID do protocolo atual.
+- **Webhook da instância** — além de `instanceName`, envia id, jid, telefone, status de conexão/login e nome do WhatsApp (`instance`).
+- **Excluir e recriar instância** com o mesmo token deixa de abrir a tela vazia (cache de auth limpo de verdade).
+- **Painel** — modal de licença não aparece mais atrás de “Excluir” nem ao clicar em Voltar.
+
+---
+
+### Novidades ✅
+
+#### Conexão WhatsApp
+
+- Handler queue criada por conexão — evita misturar eventos entre sessões após reconnect.
+- Download de mídia ignora `mediaKey` quando a mídia não está criptografada (menos erro ao baixar).
+- Protos e dependências do motor atualizados (Go 1.26 no build).
+
+#### Usuários / privacidade
+
+- Atualização da blocklist (`UpdateBlocklist`) passando a usar LID (+ `pn_jid` quando necessário).
+
+#### Webhooks
+
+- Payload enriquecido com dados da instância (`userID`, `instanceName`, `instanceJid`, `instancePhone`, `instanceConnected`, `instanceLoggedIn`, `instanceOwner` e objeto `instance`).
+- O **token da instância não é enviado** no webhook.
+- Vale para webhook da instância, webhook global e RabbitMQ.
+
+#### Painel admin
+
+- Delete de instância limpa token em cache, cliente WhatsApp e arquivos (recriar com o mesmo token funciona).
+- Modal de licença só abre quando você clica nele — não “vaza” atrás de exclusão nem ao voltar da instância.
+
+### Como atualizar ♻️
+
+```bash
+docker pull ggdadds/kirago:1.11
+# ou
+docker pull ggdadds/kirago:latest
+```
+
+Reinicie o container e confira `GET /health` (`version` ≈ `1.11`, `update_available: false`).
+
+---
+
 ## [1.10] - 2026-08-10
 
 ### O que há de novo 🚀
