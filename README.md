@@ -60,6 +60,19 @@ Crie um arquivo `.env` na mesma pasta do `docker-compose.yml`. Você pode copiar
 | `TZ` | — | Timezone (ex: `America/Sao_Paulo`) |
 | `DB_SSLMODE` | `false` | Modo SSL do banco |
 
+### Assistente do dashboard (opcional)
+
+Bolinha flutuante nas páginas `/dashboard/instances` e `/dashboard/instance`. Só aparece com `ENABLED=true`. Sem API key = templates/FAQ. Com key = híbrido (templates + LLM).
+
+| Variável | Padrão | Descrição |
+|---|---|---|
+| `KIRAGO_ASSISTANT_ENABLED` | `false` | `true`/`1` mostra a bolinha do assistente |
+| `KIRAGO_ASSISTANT_PROVIDER` | `groq` | Nome do provedor (minúsculo): `groq` (Groq Cloud), `openai` (OpenAI) ou `anthropic` (Anthropic Claude) |
+| `KIRAGO_ASSISTANT_API_KEY` | — | Key do provedor escolhido (fica só no servidor; nunca no browser) |
+| `KIRAGO_ASSISTANT_MODEL` | conforme provider | Ex.: Groq `llama-3.3-70b-versatile`, OpenAI `gpt-4o-mini`, Anthropic `claude-sonnet-4-20250514` |
+
+APIs admin (header `Authorization: ADMIN_TOKEN`): `GET /admin/assistant/status`, `POST /admin/assistant/chat`.
+
 ### Variáveis de sessão e dispositivo
 
 | Variável | Padrão | Descrição |
@@ -172,6 +185,16 @@ Após subir a instância:
 - O histórico completo de cada versão está no [CHANGELOG.md](./CHANGELOG.md).
 
 > As atualizações do software na sua instalação dependem da **assinatura ativa** e do canal pelo qual você recebe o KiraGo (hospedagem gerenciada, imagem fornecida pelo suporte, etc.). O aviso no painel informa que existe versão mais nova; a aplicação na sua infraestrutura segue o processo do seu plano.
+
+## Notificações no celular (painel)
+
+Você pode receber alertas da instância no celular (conexão, mensagens, etc.), pelo painel:
+
+1. Abra a instância **no celular** (navegador) **ou** instale o KiraGo como app (**Configurações → Instalar app**).
+2. No card **Notificações**, escolha os eventos e toque em **Ativar neste dispositivo**.
+3. Aceite a permissão de notificação do navegador / sistema.
+
+No computador (navegador normal, sem o app instalado), o card de notificações **não aparece** — use o celular ou o app instalado.
 
 ## Autenticação
 
@@ -547,7 +570,7 @@ Abaixo, **o que cada evento seria** na prática — o que você está assinando 
 | **Receber tudo** | `"events": ["All"]` em um ou mais webhooks | `KIRAGO_GLOBAL_WEBHOOK_EVENTS` vazio |
 | **Disparo** | POST para cada URL ativa que assina o evento | POST único no servidor global |
 | **Pausar sem apagar** | `"active": false` no webhook | — |
-| **Payload** | Dados do evento | Igual + `userID` e `instanceName` |
+| **Payload** | Dados do evento + `userID`, `instanceName` e objeto `instance` (id, name, jid, phone, connected, loggedIn, owner) | Igual |
 | **HMAC** | Por instância | `KIRAGO_GLOBAL_HMAC_KEY` |
 | **Retry automático** | Sim (por URL na outbox) | Não |
 | **API legada** | `POST /webhook` = webhook **Principal** | — |
@@ -656,7 +679,7 @@ Se você hospeda por conta própria e sua assinatura inclui atualização de ima
 
 Cada release está documentada em [CHANGELOG.md](./CHANGELOG.md). Releases publicadas: [GitHub — Kira-Go](https://github.com/luiis716/Kira-Go/releases).
 
-**Versão atual (documentada):** [1.7](./CHANGELOG.md#17---2026-06-10) — observação por instância, múltiplos webhooks, pools Webshare no admin e painel renovado.
+**Versão atual (documentada):** [1.10](./CHANGELOG.md#110---2026-08-10) — motor WhatsApp atualizado; grupos, recado e estabilidade LID.
 
 ## Suporte
 
