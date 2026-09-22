@@ -4,6 +4,53 @@ Notas de versão do KiraGo para **assinantes** — o que mudou no produto, no pa
 
 Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.com/luiis716/Kira-Go/releases).
 
+## [1.13] - 2026-09-22
+
+### O que há de novo 🚀
+
+**KiraGo 1.13 — Motor WhatsApp no tip do fork + link preview com imagem em canais**
+
+#### Principais melhorias
+
+- **Motor whatsmeow** alinhado ao fork [`luiis716/whatsmeow`](https://github.com/luiis716/whatsmeow) (`35ae409`) — WhatsApp Web **v1047769893**.
+- **Link preview** — Open Graph com User-Agent (Mercado Livre etc. sem 403); thumbnail via MMS (`MediaLinkThumbnail`); em `@newsletter` usa `UploadNewsletter` + `MediaHandle`.
+- **Bots / WASA / pair** — root secrets, decrypt de bot e refresh de QR/ADV do upstream.
+- **Deps** do motor atualizadas (`go.mau.fi/util`, crypto/net).
+
+---
+
+### Novidades ✅
+
+#### Conexão WhatsApp
+
+- `./whatsmeow` sincronizado com `luiis/main` (working tree limpo, tracking do fork).
+- Fingerprint do cliente na versão WA Web **v1047769893**.
+- Melhorias herdadas do tip: pair `companion_reg_refresh`, handshake com payload nil, `SendResponse.Chat`.
+
+#### Mensagens e mídia
+
+- **`POST /chat/send/text` + `LinkPreview: true`**:
+  - busca Open Graph com User-Agent de navegador;
+  - gera thumbnail JPEG e sobe via `MediaLinkThumbnail`;
+  - em canal (`@newsletter`), upload newsletter + `MediaHandle` para a capa aparecer.
+- Download de sticker pack com nil-check; tratamento de mídia/bot mais estável.
+
+#### Grupos
+
+- `SetGroupDescription` alinhado ao fluxo de topic do protocolo atual.
+
+### Como atualizar ♻️
+
+```bash
+docker pull ggdadds/kirago:1.13
+# ou
+docker pull ggdadds/kirago:latest
+```
+
+Reinicie o container e confira `GET /health` (`version` ≈ `1.13`, `update_available: false`).
+
+---
+
 ## [1.12] - 2026-09-07
 
 ### O que há de novo 🚀
@@ -20,6 +67,8 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
 - **Protos** atualizados para o WhatsApp Web recente (v1046691727).
 - **Botões (`/chat/send/buttons`)** alinhados à referência native flow (reply legado, CTAs, webview).
 - **Assistente no dashboard** — bolinha com templates de JSON; com API key, também Groq/OpenAI/Anthropic.
+- **Webhook** — posts de canal saem como `NewsletterMessage` (não mais como `Message` privado).
+- **Canais** — envio para `@newsletter` em `/chat/send/*` deixa de falhar na validação de telefone.
 
 ---
 
@@ -29,7 +78,7 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
 
 - Stream error processado antes do auto-reconnect.
 - Context correto no handshake/noise socket.
-- Cliente alinhado à versão mais recente do protocolo.
+- Cliente alinhado à versão do protocolo (v1046691727).
 
 #### Mensagens e mídia
 
@@ -41,6 +90,11 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
   - validação: reply não mistura com CTA/PIX;
   - webview em botão URL (`ButtonWebview` / `WebviewPresentation` / `Type=webview`);
   - stanza `<native_flow v="9" name="mixed">` (sem `biz_bot` em contas pessoais).
+
+#### Webhooks
+
+- Posts de **canal/newsletter** (`@newsletter`) saem como evento dedicado `NewsletterMessage` (não mais como `Message` privado). Opção na setagem do webhook / push. Continuam: `NewsletterJoin` / `Leave` / `MuteChange` / `LiveUpdate`.
+- Envio para `@newsletter` em `/chat/send/*` deixa de falhar na validação de telefone (`IsOnWhatsApp`).
 
 #### Painel
 
