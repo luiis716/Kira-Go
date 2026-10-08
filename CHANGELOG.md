@@ -4,6 +4,51 @@ Notas de versão do KiraGo para **assinantes** — o que mudou no produto, no pa
 
 Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.com/luiis716/Kira-Go/releases).
 
+## [1.14] - 2026-10-07
+
+### O que há de novo 🚀
+
+**KiraGo 1.14 — Motor WhatsApp v1049558099, blocklist com LID e erro de sync**
+
+#### Principais melhorias
+
+- **Motor WhatsApp** atualizado — cliente alinhado ao WhatsApp Web **v1049558099**.
+- **Blocklist** — `GET /user/blocklist` e `POST /user/block` usam `dhash` e devolvem `Items` (LID + telefone) além de `JIDs`.
+- **Webhook** `AppStateSyncError` quando a sincronização de app state falha.
+- **Conexão** — correção de frame partido no socket e retry de recibo mais estável.
+- **Bots Muse/WASA** — secret ativo e cifra ao enviar para o bot Hatch.
+
+---
+
+### Novidades ✅
+
+#### Conexão WhatsApp
+
+- Fingerprint do cliente na versão WA Web **v1049558099**.
+- Frame de socket com tamanho certo quando a mensagem vem partida.
+- Recibo de retry tratado de forma síncrona quando o ack síncrono está ligado.
+
+#### Usuários
+
+- Blocklist nova: cada item traz `LID`, `PN` e `Active`.
+- `JIDs` continua na resposta (telefone quando existe, senão LID) para quem já lia a lista antiga.
+
+#### Webhooks
+
+- Evento `AppStateSyncError` (painel: “Erro de sync” / “Erro de sincronização”).
+
+### Como atualizar ♻️
+
+```bash
+docker pull ggdadds/kirago:1.14
+# ou
+docker pull ggdadds/kirago:latest
+```
+
+Reinicie o container e confira `GET /health` (`version` ≈ `1.14`, `update_available: false`).
+
+---
+
 ## [1.13] - 2026-09-22
 
 ### O que há de novo 🚀
@@ -12,7 +57,7 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
 
 #### Principais melhorias
 
-- **Motor whatsmeow** alinhado ao fork [`luiis716/whatsmeow`](https://github.com/luiis716/whatsmeow) (`35ae409`) — WhatsApp Web **v1047769893**.
+- **Motor WhatsApp** atualizado — cliente alinhado ao WhatsApp Web **v1047769893**.
 - **Link preview** — Open Graph com User-Agent (Mercado Livre etc. sem 403); thumbnail via MMS (`MediaLinkThumbnail`); em `@newsletter` usa `UploadNewsletter` + `MediaHandle`.
 - **Bots / WASA / pair** — root secrets, decrypt de bot e refresh de QR/ADV do upstream.
 - **Deps** do motor atualizadas (`go.mau.fi/util`, crypto/net).
@@ -23,7 +68,6 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
 
 #### Conexão WhatsApp
 
-- `./whatsmeow` sincronizado com `luiis/main` (working tree limpo, tracking do fork).
 - Fingerprint do cliente na versão WA Web **v1047769893**.
 - Melhorias herdadas do tip: pair `companion_reg_refresh`, handshake com payload nil, `SendResponse.Chat`.
 
