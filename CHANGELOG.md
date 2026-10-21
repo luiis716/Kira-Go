@@ -4,6 +4,51 @@ Notas de versão do KiraGo para **assinantes** — o que mudou no produto, no pa
 
 Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.com/luiis716/Kira-Go/releases).
 
+## [1.15] - 2026-10-21
+
+### O que há de novo 🚀
+
+**KiraGo 1.15 — Motor WhatsApp v1050728964, encaminhamento de canal e marco**
+
+#### Principais melhorias
+
+- **Motor WhatsApp** atualizado — cliente alinhado ao WhatsApp Web **v1050728964**.
+- **Canal** — mensagens e o live update passam a trazer a contagem de encaminhamentos (`ForwardsCount`).
+- **Webhook** `NewsletterMilestone` quando o canal atinge um marco (visualizações ou reação).
+- **Envio privado** — se o hash de participantes não bater, o cache de dispositivos é invalidado e o envio segue para os aparelhos certos.
+- **Conexão** — leitura de stanza mais tolerante e refresh de CAT só quando o callback está configurado.
+
+---
+
+### Novidades ✅
+
+#### Conexão WhatsApp
+
+- Fingerprint do cliente na versão WA Web **v1050728964**.
+- Decode de stanza ignora erro de tipo na tag, em vez de derrubar o pacote.
+- Falha de CAT inválido ou expirado só dispara refresh se houver callback.
+
+#### Canais
+
+- `ForwardsCount` nas mensagens do canal e no evento `NewsletterLiveUpdate`.
+- Evento `NewsletterMilestone` (painel: “Marco” / “Marco do canal”), com tipo, valor e código de reação.
+
+#### Mensagens
+
+- Conversa privada: cache de dispositivos descartado quando o servidor recusa o hash de participantes, para o próximo envio alcançar os aparelhos atualizados.
+
+### Como atualizar ♻️
+
+```bash
+docker pull ggdadds/kirago:1.15
+# ou
+docker pull ggdadds/kirago:latest
+```
+
+Reinicie o container e confira `GET /health` (`version` ≈ `1.15`, `update_available: false`).
+
+---
+
 ## [1.14] - 2026-10-07
 
 ### O que há de novo 🚀
