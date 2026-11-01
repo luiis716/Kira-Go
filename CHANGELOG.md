@@ -4,6 +4,49 @@ Notas de versão do KiraGo para **assinantes** — o que mudou no produto, no pa
 
 Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.com/luiis716/Kira-Go/releases).
 
+## [1.16] - 2026-11-01
+
+### O que há de novo 🚀
+
+**KiraGo 1.16 — Motor WhatsApp v1052556849 e vídeo em streaming**
+
+#### Principais melhorias
+
+- **Motor WhatsApp** atualizado — cliente alinhado ao WhatsApp Web **v1052556849**.
+- **Vídeo** enviado pela API passa a incluir o sidecar de streaming, para o WhatsApp reproduzir enquanto o arquivo baixa.
+- **Conexão** tenta de novo se o handshake não responde ou se o socket fecha no meio.
+
+---
+
+### Novidades ✅
+
+#### Conexão WhatsApp
+
+- Fingerprint do cliente na versão WA Web **v1052556849**.
+- Handshake sem resposta, ou socket fechado durante a espera, entra na reconexão automática.
+
+#### Mensagens
+
+- Envio de vídeo no chat, no status, no cabeçalho interativo, no Chatwoot e no Typebot grava o `StreamingSidecar` gerado no upload.
+- Número sem LID no WhatsApp passa a falhar com o erro de destinatário fora do WhatsApp.
+
+#### Contatos e log
+
+- Quando o mesmo contato chega duplicado, o nome guardado é o mais novo.
+- O log deixa de imprimir token de mídia e de ligação.
+
+### Como atualizar ♻️
+
+```bash
+docker pull ggdadds/kirago:1.16
+# ou
+docker pull ggdadds/kirago:latest
+```
+
+Reinicie o container e confira `GET /health` (`version` ≈ `1.16`, `update_available: false`).
+
+---
+
 ## [1.15] - 2026-10-21
 
 ### O que há de novo 🚀
@@ -36,6 +79,12 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
 #### Mensagens
 
 - Conversa privada: cache de dispositivos descartado quando o servidor recusa o hash de participantes, para o próximo envio alcançar os aparelhos atualizados.
+- Número de fora do Brasil (DDI diferente de `55`, por exemplo `+971529846014`) é enviado mesmo quando a consulta ao WhatsApp não confirma o cadastro. Número com `55` continua bloqueado se o WhatsApp disser que não existe.
+
+#### Grupos
+
+- Na subida, se o banco antigo não tiver a coluna `sender_timestamp` em `whatsmeow_privacy_tokens`, a API cria a coluna e o índice. Sem isso, criar grupo falhava antes de chamar o WhatsApp.
+- `POST /group/create` devolve o erro real quando a criação falha.
 
 ### Como atualizar ♻️
 
