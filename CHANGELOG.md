@@ -4,6 +4,57 @@ Notas de versão do KiraGo para **assinantes** — o que mudou no produto, no pa
 
 Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.com/luiis716/Kira-Go/releases).
 
+## [1.17] - 2026-11-07
+
+### O que há de novo 🚀
+
+**KiraGo 1.17 — Proxy pelo celular (app + QR) e instalação no painel**
+
+#### Principais melhorias
+
+- **KiraGo Proxy** — modo de proxy no painel (junto com Webshare e manual) para a sessão WhatsApp sair pelo **IP do celular** do cliente, com consentimento.
+- **QR no painel** — o celular lê o QR e conecta sozinho (sem ficar digitando host/token).
+- **EasyPanel / Portainer** — no HTTPS do subdomínio o app usa `wss://…/mobile-proxy/tunnel` (sem abrir porta TCP extra).
+- **Instalar app** — seletor no painel da instância: **PWA** (notificações) ou **APK do Proxy**.
+
+---
+
+### Novidades ✅
+
+#### Proxy (painel)
+
+- Novo modo **KiraGo Proxy — app no celular**, no mesmo fluxo do Webshare.
+- Status ao vivo: celular online/offline, tráfego ↑/↓ e conexões ativas.
+- QR de pareamento com host, porta/path e token da instância.
+- Em painéis abertos por HTTPS (EasyPanel/Portainer/Traefik), o QR usa WSS no mesmo domínio.
+
+#### App Android (KiraGo Proxy)
+
+- Baixe em **Instalar app → KiraGo Proxy (APK)** (`/downloads/kirago-proxy.apk`).
+- **Ler QR do painel**, tráfego em tempo real, versão do APK na tela e preenchimento manual opcional.
+- Keepalive para não cair parado; conexão WSS no subdomínio público.
+
+#### Servidor / Docker
+
+- Relay embutido no container quando o túnel aponta para `127.0.0.1` (um serviço só no EasyPanel).
+- Variáveis opcionais: `KIRAGO_MOBILE_PROXY_*` (SOCKS, status, túnel, host público, embed).
+- Endpoint público de túnel: `GET /mobile-proxy/tunnel` (WebSocket).
+- API de sessão: `GET/POST /session/proxy/mobile`.
+
+### Como atualizar ♻️
+
+```bash
+docker pull ggdadds/kirago:1.17
+# ou
+docker pull ggdadds/kirago:latest
+```
+
+Reinicie o container e confira `GET /health` (`version` ≈ `1.17`, `update_available: false`).
+
+No painel: instância → **Instalar app** → baixe o APK do Proxy → **Proxy** → modo app → leia o QR.
+
+---
+
 ## [1.16] - 2026-11-01
 
 ### O que há de novo 🚀
