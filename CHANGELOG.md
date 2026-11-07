@@ -8,7 +8,7 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
 
 ### O que há de novo 🚀
 
-**KiraGo 1.17 — Proxy pelo celular (app + QR) e instalação no painel**
+**KiraGo 1.17 — Proxy pelo celular (app + QR) e motor WhatsApp mais estável**
 
 #### Principais melhorias
 
@@ -16,6 +16,7 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
 - **QR no painel** — o celular lê o QR e conecta sozinho (sem ficar digitando host/token).
 - **EasyPanel / Portainer** — no HTTPS do subdomínio o app usa `wss://…/mobile-proxy/tunnel` (sem abrir porta TCP extra).
 - **Instalar app** — seletor no painel da instância: **PWA** (notificações) ou **APK do Proxy**.
+- **Motor WhatsApp** — app state, recibos, keepalive/reconnect e histórico em chats de bot mais estáveis (cliente WA Web **v1052556849**).
 
 ---
 
@@ -40,6 +41,13 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
 - Variáveis opcionais: `KIRAGO_MOBILE_PROXY_*` (SOCKS, status, túnel, host público, embed).
 - Endpoint público de túnel: `GET /mobile-proxy/tunnel` (WebSocket).
 - API de sessão: `GET/POST /session/proxy/mobile`.
+
+#### Conexão WhatsApp
+
+- App state mais tolerante a erro em patch/sync de contatos.
+- Mais formatos de recibo em grupo; logs melhores em decrypt/SKDM.
+- Keepalive/reconnect sem sobrescrever disconnect concorrente; disconnect atômico no socket.
+- Histórico em chats de bot com remetente (JID do chat) correto.
 
 ### Como atualizar ♻️
 
