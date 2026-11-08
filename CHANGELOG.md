@@ -16,6 +16,7 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
 - **QR no painel** — o celular lê o QR e conecta sozinho (sem ficar digitando host/token).
 - **EasyPanel / Portainer** — no HTTPS do subdomínio o app usa `wss://…/mobile-proxy/tunnel` (sem abrir porta TCP extra).
 - **Instalar app** — seletor no painel da instância: **PWA** (notificações) ou **APK do Proxy**.
+- **App Proxy** — visual KiraGo, várias instâncias no mesmo celular, nome/avatar do WhatsApp quando a sessão conectar.
 - **Motor WhatsApp** — app state, recibos, keepalive/reconnect e histórico em chats de bot mais estáveis (cliente WA Web **v1052556849**).
 
 ---
@@ -26,14 +27,16 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
 
 - Novo modo **KiraGo Proxy — app no celular**, no mesmo fluxo do Webshare.
 - Status ao vivo: celular online/offline, tráfego ↑/↓ e conexões ativas.
-- QR de pareamento com host, porta/path e token da instância.
+- QR de pareamento com host, porta/path, token e nome da instância.
 - Em painéis abertos por HTTPS (EasyPanel/Portainer/Traefik), o QR usa WSS no mesmo domínio.
+- Status mobile inclui nome da instância, nome/JID do WhatsApp e caminho do avatar (o app busca depois que a sessão logar).
 
 #### App Android (KiraGo Proxy)
 
 - Baixe em **Instalar app → KiraGo Proxy (APK)** (`/downloads/kirago-proxy.apk`).
-- **Ler QR do painel**, tráfego em tempo real, versão do APK na tela e preenchimento manual opcional.
-- Keepalive para não cair parado; conexão WSS no subdomínio público.
+- Visual alinhado ao painel KiraGo; lista de **várias instâncias** (QR adiciona sem derrubar as outras).
+- Card com **nome da instância**, **nome do WhatsApp** e **avatar** (preenche quando o WhatsApp conectar).
+- Tráfego em tempo real, WSS no subdomínio público e keepalive.
 
 #### Servidor / Docker
 
