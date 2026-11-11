@@ -17,6 +17,7 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
 - **EasyPanel / Portainer** — no HTTPS do subdomínio o app usa `wss://…/mobile-proxy/tunnel` (sem abrir porta TCP extra).
 - **Instalar app** — seletor no painel da instância: **PWA** (notificações) ou **APK do Proxy**.
 - **App Proxy** — visual KiraGo, várias instâncias no mesmo celular, nome/avatar do WhatsApp quando a sessão conectar.
+- **App sempre ativo** — reconecta sozinho quando a rede volta; religa após reboot/kill; botão para liberar otimização de bateria.
 - **Motor WhatsApp** — app state, recibos, keepalive/reconnect e histórico em chats de bot mais estáveis (cliente WA Web **v1052556849**).
 
 ---
@@ -37,6 +38,8 @@ Cada release também pode ser consultada em [GitHub — Kira-Go](https://github.
 - Visual alinhado ao painel KiraGo; lista de **várias instâncias** (QR adiciona sem derrubar as outras).
 - Card com **nome da instância**, **nome do WhatsApp** e **avatar** (preenche quando o WhatsApp conectar).
 - Tráfego em tempo real, WSS no subdomínio público e keepalive.
+- **Auto-reconnect** se cair a rede do celular; restaura túneis se o Android matar o app ou após reiniciar o aparelho.
+- Botão **Manter ativo (bateria)** — pede para tirar o app da economia de energia (evita desligar de madrugada).
 
 #### Servidor / Docker
 
